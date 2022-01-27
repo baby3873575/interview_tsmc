@@ -19,12 +19,14 @@ def ut_testclient():
 
 
 #TODO: should offline copy the data to local and put to storage
-@pytest.fixture
-def syncdata(ut_testclient):
-    rv = ut_testclient.post(
-    '/api/v1/usersync',
-    content_type="application/json")
-    assert rv.status_code == 201
+@pytest.fixture(scope="session",autouse=True)
+def syncdata():
+    app = create_app('testing')
+    app_context = app.app_context()
+    app_context.push()
+    from app.libs.users_manager import UsersManager
+    UsersManager.sync_users_from_source()
     yield
     print("====tear down syncdata===")
+    app_context.pop()
     #TODO: clean up mockdb
